@@ -6,7 +6,7 @@ describe("Lexer", () => {
     const input = "=(){},;+-*/><!";
 
     const expected = [
-      tokens.eq,
+      tokens.assgn,
       tokens.lp,
       tokens.rp,
       tokens.lb,
@@ -65,12 +65,12 @@ describe("Lexer", () => {
     const expected = [
       tokens.let,
       tokens.idt("five"),
-      tokens.eq,
+      tokens.assgn,
       tokens.int("5"),
       tokens.semi,
       tokens.let,
       tokens.idt("ten"),
-      tokens.eq,
+      tokens.assgn,
       tokens.int("10"),
       tokens.semi
     ];
@@ -92,7 +92,7 @@ describe("Lexer", () => {
     const expected = [
       tokens.let,
       tokens.idt("add"),
-      tokens.eq,
+      tokens.assgn,
       tokens.fn,
       tokens.lp,
       tokens.idt("x"),
@@ -123,7 +123,7 @@ describe("Lexer", () => {
     const expected = [
       tokens.let,
       tokens.idt("result"),
-      tokens.eq,
+      tokens.assgn,
       tokens.idt("add"),
       tokens.lp,
       tokens.idt("five"),
@@ -140,7 +140,7 @@ describe("Lexer", () => {
     }
   });
 
-  it("can tokenise boolean operators", () => {
+  it("can tokenise boolean operators and if/else", () => {
     let input = `
         5 < 10 > 5;
 
@@ -149,9 +149,6 @@ describe("Lexer", () => {
         } else {
           return false;
         }
-
-        10 == 10;
-        10 != 9;
       `;
 
     const expected = [
@@ -178,6 +175,29 @@ describe("Lexer", () => {
       tokens.flse,
       tokens.semi,
       tokens.rb
+    ];
+
+    const lexer = new Lexer(input);
+
+    for (const token of expected) {
+      expect(lexer.nextToken()).toMatchObject(token);
+    }
+  });
+
+  it("can tokenise multi character tokens", () => {
+    let input = `
+      10 == 10;
+      10 != 9;
+    `;
+
+    const expected = [
+      tokens.int("10"),
+      tokens.eq,
+      tokens.int("10"),
+      tokens.semi,
+      tokens.int("10"),
+      tokens.neq,
+      tokens.int("9")
     ];
 
     const lexer = new Lexer(input);

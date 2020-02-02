@@ -41,7 +41,28 @@ export default class Lexer {
 
     switch (this.char) {
       case "=":
-        token = tokens.eq;
+        /* == */
+        if (this.peekChar() == "=") {
+          token = tokens.eq;
+          this.readChar();
+        } else {
+          token = tokens.assgn;
+        }
+        break;
+      case "!":
+        /* != */
+        if (this.peekChar() == "=") {
+          token = tokens.neq;
+          this.readChar();
+        } else {
+          token = tokens.bang;
+        }
+        break;
+      case ">":
+        token = tokens.gt;
+        break;
+      case "<":
+        token = tokens.lt;
         break;
       /* Operators */
       case "+":
@@ -73,15 +94,6 @@ export default class Lexer {
         break;
       case ";":
         token = tokens.semi;
-        break;
-      case ">":
-        token = tokens.gt;
-        break;
-      case "<":
-        token = tokens.lt;
-        break;
-      case "!":
-        token = tokens.bang;
         break;
       case null:
         break;
@@ -129,6 +141,10 @@ export default class Lexer {
     let end = this.position;
 
     return this.input.slice(start, end);
+  }
+
+  private peekChar() {
+    return this.toRead >= this.input.length ? null : this.input[this.toRead];
   }
 
   private skipWhitespace() {

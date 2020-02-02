@@ -29,7 +29,10 @@ export enum TokenType {
   False = "false",
   If = "if",
   Else = "else",
-  Return = "return"
+  Return = "return",
+
+  Equals = "==",
+  NotEquals = "!="
 }
 
 export type Token = {
@@ -55,7 +58,7 @@ export const tokens = {
   minus: { type: TokenType.Minus, literal: "-" },
   div: { type: TokenType.Divide, literal: "/" },
   mult: { type: TokenType.Multiply, literal: "*" },
-  eq: { type: TokenType.Assignment, literal: "=" },
+  assgn: { type: TokenType.Assignment, literal: "=" },
 
   lt: { type: TokenType.LessThan, literal: "<" },
   gt: { type: TokenType.GreaterThan, literal: ">" },
@@ -66,6 +69,9 @@ export const tokens = {
   iff: { type: TokenType.If, literal: "if" },
   els: { type: TokenType.Else, literal: "else" },
   ret: { type: TokenType.Return, literal: "return" },
+
+  eq: { type: TokenType.Equals, literal: "==" },
+  neq: { type: TokenType.NotEquals, literal: "!=" },
 
   idt: (literal: string) => ({
     type: TokenType.Identifier,
