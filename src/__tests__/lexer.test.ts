@@ -2,6 +2,29 @@ import Lexer from "@/lexer";
 import { tokens } from "@/token";
 
 describe("Lexer", () => {
+  it("can handle empty input", () => {
+    expect((new Lexer("")).nextToken()).toMatchObject(tokens.eof);
+  });
+
+  it("can handle nextToken after reaching the end", () => {
+    const lexer = new Lexer("=");
+
+    expect(lexer.nextToken()).toMatchObject(tokens.assgn);
+    expect(lexer.nextToken()).toMatchObject(tokens.eof);
+  })
+
+  it("can recognise digits more than 1", () => {
+    const lexer = new Lexer("10");
+
+    expect(lexer.nextToken()).toMatchObject(tokens.int("10"));
+  })
+
+  it("returns an error if an illegal token is passed in", () => {
+    const lexer = new Lexer("你");
+
+    expect(lexer.nextToken()).toMatchObject(tokens.err("你"));
+  })
+
   it("can recognise single character tokens", () => {
     const input = "=(){},;+-*/><!";
 
@@ -18,7 +41,8 @@ describe("Lexer", () => {
       tokens.mult,
       tokens.div,
       tokens.gt,
-      tokens.lt
+      tokens.lt,
+      tokens.bang,
     ];
 
     const lexer = new Lexer(input);
@@ -46,7 +70,8 @@ describe("Lexer", () => {
       tokens.let,
       tokens.iff,
       tokens.els,
-      tokens.ret
+      tokens.ret,
+      tokens.eof
     ];
 
     const lexer = new Lexer(input);

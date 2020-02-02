@@ -1,8 +1,8 @@
-import { Token, tokens, getIdentifier } from "./token";
+import { getIdentifier, Token, tokens } from "./token";
 
 function isLetter(c: string | null) {
   if (c === null) {
-    return;
+    return false;
   }
 
   let n = c.charCodeAt(0);
@@ -11,7 +11,7 @@ function isLetter(c: string | null) {
 
 function isDigit(c: string | null) {
   if (c === null) {
-    return;
+    return false;
   }
 
   let n = c.charCodeAt(0);
