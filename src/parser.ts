@@ -1,7 +1,20 @@
-import { Identifier, ReturnStatement, Expression } from './ast'
-import { Token, TokenType, tokens } from '@/token'
-import { Program, Statement, LetStatement } from '@/ast'
+import { Token, TokenType } from '@/token'
+import {
+  Program,
+  Statement,
+  LetStatement,
+  Identifier,
+  ReturnStatement,
+  Expression,
+  ExpressionStatement,
+  IntegerLiteral,
+  PrefixExpression,
+} from '@/ast'
 import Lexer from '@/lexer'
+import Precedence from './precedence'
+
+type PrefixParser = (token: Token) => Expression | null
+type InfixParser = (expression: Expression) => Expression | null
 
 export class Parser {
   private lexer: Lexer
@@ -10,6 +23,18 @@ export class Parser {
   private peekToken: Token | null = null
 
   private _errors: string[] = []
+
+  private prefixParsers: Partial<Record<TokenType, PrefixParser>> = {
+    [TokenType.Identifier]: token => new Identifier(token),
+    [TokenType.Integer]: token => {
+      const value = parseInt(token.literal, 10)
+
+      return Number.isNaN(value) ? null : new IntegerLiteral(token, value)
+    },
+    [TokenType.Bang]: this.parsePrefixExpression.bind(this),
+    [TokenType.Minus]: this.parsePrefixExpression.bind(this),
+  }
+  private infixParsers: Partial<Record<TokenType, InfixParser>> = {}
 
   public constructor(lexer: Lexer) {
     this.lexer = lexer
@@ -21,7 +46,7 @@ export class Parser {
   public parseProgram() {
     const program = new Program()
 
-    while (this.currToken?.type !== TokenType.EOF) {
+    while (!this.currTokenIs(TokenType.EOF)) {
       const statement = this.parseStatement()
 
       statement !== null && program.statements.push(statement)
@@ -49,7 +74,7 @@ export class Parser {
       case TokenType.Return:
         return this.parseReturnStatement(token)
       default:
-        return null
+        return this.parseExpressionStatement(token)
     }
   }
 
@@ -70,9 +95,14 @@ export class Parser {
       return null
     }
 
-    const value = this.parseExpression()
+    while (!this.currTokenIs(TokenType.Semicolon)) {
+      this.nextToken()
+    }
 
-    return value ? new LetStatement(letToken, name, value) : null
+    return new LetStatement(letToken, name, {
+      tokenLiteral: () => '',
+      expressionNode() {},
+    })
   }
 
   /**
@@ -81,20 +111,52 @@ export class Parser {
   private parseReturnStatement(returnToken: Token) {
     this.nextToken()
 
-    const returnValue = this.parseExpression()
-
-    return returnValue ? new ReturnStatement(returnToken, returnValue) : null
-  }
-
-  private parseExpression(): Expression | null {
     while (!this.currTokenIs(TokenType.Semicolon)) {
       this.nextToken()
     }
 
-    return {
+    return new ReturnStatement(returnToken, {
       tokenLiteral: () => '',
-      expressionNode: () => {},
+      expressionNode() {},
+    })
+  }
+
+  private parseExpressionStatement(token: Token) {
+    const expr = this.parseExpression(Precedence.LOWEST)
+
+    if (this.peekTokenIs(TokenType.Semicolon)) {
+      this.nextToken()
     }
+
+    return expr ? new ExpressionStatement(token, expr) : null
+  }
+
+  private parseExpression(precedence: Precedence): Expression | null {
+    if (!this.currToken) {
+      return null
+    }
+
+    const prefixParser = this.prefixParsers[
+      this.currToken.type ?? TokenType.Illegal
+    ]
+
+    if (!prefixParser) {
+      this.errors.push(
+        `No prefix parse function found for ${this.currToken.type}`
+      )
+
+      return null
+    }
+
+    return prefixParser(this.currToken) ?? null
+  }
+
+  private parsePrefixExpression(operator: Token) {
+    this.nextToken()
+    return new PrefixExpression(
+      operator,
+      this.parseExpression(Precedence.PREFIX)!
+    )
   }
 
   private nextToken() {

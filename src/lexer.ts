@@ -1,6 +1,10 @@
 import { getIdentifier, Token, tokens } from './token'
 
-function isLetter(c: string) {
+function isLetter(c: string | null) {
+  if (c === null) {
+    return false
+  }
+
   let n = c.charCodeAt(0)
   return (n >= 65 && n < 91) || (n >= 97 && n < 123)
 }

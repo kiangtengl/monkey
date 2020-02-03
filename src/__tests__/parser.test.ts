@@ -1,4 +1,13 @@
-import { LetStatement, Statement, ReturnStatement } from './../ast'
+import {
+  LetStatement,
+  Statement,
+  ReturnStatement,
+  ExpressionStatement,
+  Identifier,
+  IntegerLiteral,
+  Expression,
+  PrefixExpression,
+} from './../ast'
 import Lexer from '@/lexer'
 import { Parser } from '@/parser'
 
@@ -19,6 +28,16 @@ Errors while parsing:
 ${parser.errors.join('\n')}
     `)
   }
+}
+
+function testIntegerLiteral(expr: Expression, expected: number) {
+  expect(expr).toBeInstanceOf(IntegerLiteral)
+  if (!(expr instanceof IntegerLiteral)) {
+    return
+  }
+
+  expect(expr.value).toBe(expected)
+  expect(expr.tokenLiteral()).toBe(expected.toString())
 }
 
 describe('Parser', () => {
@@ -43,9 +62,9 @@ describe('Parser', () => {
 
     const lexer = new Lexer(input)
     const parser = new Parser(lexer)
-    const program = parser.parseProgram()
+    parser.parseProgram()
 
-    expect(program.statements.length).toBe(0)
+    expect(() => checkParserErrors(parser)).toThrow()
     expect(parser.errors.length).toBe(2)
   })
 
@@ -91,6 +110,95 @@ describe('Parser', () => {
       if (statement instanceof ReturnStatement) {
         expect(statement.tokenLiteral()).toBe('return')
       }
+    })
+  })
+
+  describe('Expressions Statements', () => {
+    it('Can parse identifiers', () => {
+      const input = 'foo;'
+
+      const lexer = new Lexer(input)
+      const parser = new Parser(lexer)
+      const program = parser.parseProgram()
+
+      checkParserErrors(parser)
+
+      expect(program.statements.length).toBe(1)
+
+      const [expressionStatement] = program.statements
+
+      expect(expressionStatement).toBeInstanceOf(ExpressionStatement)
+      if (!(expressionStatement instanceof ExpressionStatement)) {
+        return
+      }
+
+      const expr = expressionStatement.expression
+      expect(expr).toBeInstanceOf(Identifier)
+      if (!(expr instanceof Identifier)) {
+        return
+      }
+
+      expect(expr.value).toEqual('foo')
+      expect(expr.tokenLiteral()).toEqual('foo')
+    })
+
+    it('Can parse integers', () => {
+      const input = '5;'
+
+      const lexer = new Lexer(input)
+      const parser = new Parser(lexer)
+      const program = parser.parseProgram()
+
+      checkParserErrors(parser)
+
+      expect(program.statements.length).toBe(1)
+
+      const [expressionStatement] = program.statements
+
+      expect(expressionStatement).toBeInstanceOf(ExpressionStatement)
+      if (!(expressionStatement instanceof ExpressionStatement)) {
+        return
+      }
+
+      const expr = expressionStatement.expression
+      expect(expr).toBeInstanceOf(IntegerLiteral)
+      if (!(expr instanceof IntegerLiteral)) {
+        return
+      }
+
+      expect(expr.value).toEqual(5)
+      expect(expr.tokenLiteral()).toEqual('5')
+    })
+
+    it('Can parse prefix expressions', () => {
+      const testCases = [
+        { input: '!5;', operator: '!', expectedValue: 5 },
+        { input: '-15;', operator: '-', expectedValue: 15 },
+      ]
+
+      testCases.forEach(({ input, operator, expectedValue }) => {
+        const lexer = new Lexer(input)
+        const parser = new Parser(lexer)
+        const program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        expect(program.statements.length).toBe(1)
+        const [expressionStatement] = program.statements
+
+        expect(expressionStatement).toBeInstanceOf(ExpressionStatement)
+        if (!(expressionStatement instanceof ExpressionStatement)) {
+          return
+        }
+
+        const expr = expressionStatement.expression
+        expect(expr).toBeInstanceOf(PrefixExpression)
+        if (!(expr instanceof PrefixExpression)) {
+          return
+        }
+
+        expect(expr.operator).toEqual(operator)
+        testIntegerLiteral(expr.right, expectedValue)
+      })
     })
   })
 })
