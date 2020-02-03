@@ -9,7 +9,7 @@
     "strict": true,
     /* Others */
     "lib": ["dom", "es2015", "es2016.array.include"],
-    "types": ["jest"],
+    "types": ["jest", "node"],
     "outDir": "dist/", // target for compiled files
     "target": "esnext",
     "module": "esnext",

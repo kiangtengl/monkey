@@ -1,160 +1,156 @@
-import { getIdentifier, Token, tokens } from "./token";
+import { getIdentifier, Token, tokens } from './token'
 
-function isLetter(c: string | null) {
-  if (c === null) {
-    return false;
-  }
-
-  let n = c.charCodeAt(0);
-  return (n >= 65 && n < 91) || (n >= 97 && n < 123);
+function isLetter(c: string) {
+  let n = c.charCodeAt(0)
+  return (n >= 65 && n < 91) || (n >= 97 && n < 123)
 }
 
 function isDigit(c: string | null) {
   if (c === null) {
-    return false;
+    return false
   }
 
-  let n = c.charCodeAt(0);
-  return 48 <= n && n <= 57;
+  let n = c.charCodeAt(0)
+  return 48 <= n && n <= 57
 }
 
 export default class Lexer {
-  private input: string;
+  private input: string
 
   // current position in input (points to current char)
-  private position = 0;
+  private position = 0
 
   // current reading position in input (after current char)
-  private toRead = 0;
+  private toRead = 0
 
-  private char: string | null = null;
+  private char: string | null = null
 
   constructor(input: string) {
-    this.input = input;
-    this.readChar();
+    this.input = input
+    this.readChar()
   }
 
   public nextToken(): Token {
-    let token = tokens.eof;
+    let token = tokens.eof
 
-    this.skipWhitespace();
+    this.skipWhitespace()
 
     switch (this.char) {
-      case "=":
+      case '=':
         /* == */
-        if (this.peekChar() == "=") {
-          token = tokens.eq;
-          this.readChar();
+        if (this.peekChar() == '=') {
+          token = tokens.eq
+          this.readChar()
         } else {
-          token = tokens.assgn;
+          token = tokens.assgn
         }
-        break;
-      case "!":
+        break
+      case '!':
         /* != */
-        if (this.peekChar() == "=") {
-          token = tokens.neq;
-          this.readChar();
+        if (this.peekChar() == '=') {
+          token = tokens.neq
+          this.readChar()
         } else {
-          token = tokens.bang;
+          token = tokens.bang
         }
-        break;
-      case ">":
-        token = tokens.gt;
-        break;
-      case "<":
-        token = tokens.lt;
-        break;
+        break
+      case '>':
+        token = tokens.gt
+        break
+      case '<':
+        token = tokens.lt
+        break
       /* Operators */
-      case "+":
-        token = tokens.plus;
-        break;
-      case "*":
-        token = tokens.mult;
-        break;
-      case "-":
-        token = tokens.minus;
-        break;
-      case "/":
-        token = tokens.div;
-        break;
-      case "(":
-        token = tokens.lp;
-        break;
-      case ")":
-        token = tokens.rp;
-        break;
-      case "{":
-        token = tokens.lb;
-        break;
-      case "}":
-        token = tokens.rb;
-        break;
-      case ",":
-        token = tokens.cm;
-        break;
-      case ";":
-        token = tokens.semi;
-        break;
+      case '+':
+        token = tokens.plus
+        break
+      case '*':
+        token = tokens.mult
+        break
+      case '-':
+        token = tokens.minus
+        break
+      case '/':
+        token = tokens.div
+        break
+      case '(':
+        token = tokens.lp
+        break
+      case ')':
+        token = tokens.rp
+        break
+      case '{':
+        token = tokens.lb
+        break
+      case '}':
+        token = tokens.rb
+        break
+      case ',':
+        token = tokens.cm
+        break
+      case ';':
+        token = tokens.semi
+        break
       case null:
-        break;
+        break
       default:
         if (isLetter(this.char)) {
-          let literal = this.readIdentifier();
+          let literal = this.readIdentifier()
           return {
             type: getIdentifier(literal),
-            literal
-          };
+            literal,
+          }
         } else if (isDigit(this.char)) {
-          return tokens.int(this.readNumber());
+          return tokens.int(this.readNumber())
         } else {
-          token = tokens.err(this.char);
+          token = tokens.err(this.char)
         }
     }
 
-    this.readChar();
-    return token;
+    this.readChar()
+    return token
   }
 
   private readChar() {
     this.char =
-      this.toRead >= this.input.length ? null : this.input[this.toRead];
+      this.toRead >= this.input.length ? null : this.input[this.toRead]
 
-    this.position = this.toRead;
-    this.toRead += 1;
+    this.position = this.toRead
+    this.toRead += 1
   }
 
   private readIdentifier() {
-    let start = this.position;
-    while (isLetter(this.char)) {
-      this.readChar();
+    let start = this.position
+    while (isLetter(this.char!)) {
+      this.readChar()
     }
-    let end = this.position;
+    let end = this.position
 
-    return this.input.slice(start, end);
+    return this.input.slice(start, end)
   }
 
   private readNumber() {
-    let start = this.position;
+    let start = this.position
     while (isDigit(this.char)) {
-      this.readChar();
+      this.readChar()
     }
-    let end = this.position;
+    let end = this.position
 
-    return this.input.slice(start, end);
+    return this.input.slice(start, end)
   }
 
   private peekChar() {
-    return this.toRead >= this.input.length ? null : this.input[this.toRead];
+    return this.toRead >= this.input.length ? null : this.input[this.toRead]
   }
 
   private skipWhitespace() {
     while (
-      this.char == " " ||
-      this.char == "\t" ||
-      this.char == "\n" ||
-      this.char == "\r"
+      this.char == ' ' ||
+      this.char == '\t' ||
+      this.char == '\n' ||
+      this.char == '\r'
     ) {
-      this.readChar();
+      this.readChar()
     }
   }
 }
