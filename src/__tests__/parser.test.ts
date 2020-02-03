@@ -1,4 +1,4 @@
-import { LetStatement, Statement } from './../ast'
+import { LetStatement, Statement, ReturnStatement } from './../ast'
 import Lexer from '@/lexer'
 import { Parser } from '@/parser'
 
@@ -69,6 +69,28 @@ describe('Parser', () => {
 
     expectedIdentifiers.forEach((identifier, i) => {
       testLetStatement(program.statements[i], identifier)
+    })
+  })
+
+  it('Can parse return statements', () => {
+    const input = `
+      return 5;
+      return 10;
+      return 93322;
+    `
+
+    const lexer = new Lexer(input)
+    const parser = new Parser(lexer)
+    const program = parser.parseProgram()
+
+    checkParserErrors(parser)
+
+    expect(program.statements.length).toBe(3)
+
+    program.statements.forEach(statement => {
+      if (statement instanceof ReturnStatement) {
+        expect(statement.tokenLiteral()).toBe('return')
+      }
     })
   })
 })

@@ -1,5 +1,5 @@
-import { Identifier } from './ast'
-import { Token, TokenType } from '@/token'
+import { Identifier, ReturnStatement, Expression } from './ast'
+import { Token, TokenType, tokens } from '@/token'
 import { Program, Statement, LetStatement } from '@/ast'
 import Lexer from '@/lexer'
 
@@ -37,9 +37,17 @@ export class Parser {
   }
 
   private parseStatement(): Statement | null {
-    switch (this.currToken?.type) {
+    const token = this.currToken
+
+    if (!token) {
+      return null
+    }
+
+    switch (token.type) {
       case TokenType.Let:
-        return this.parseLetStatement()
+        return this.parseLetStatement(token)
+      case TokenType.Return:
+        return this.parseReturnStatement(token)
       default:
         return null
     }
@@ -48,9 +56,7 @@ export class Parser {
   /**
    * Parses let (identifier) (=) ()
    */
-  private parseLetStatement() {
-    const letToken = this.currToken!
-
+  private parseLetStatement(letToken: Token) {
     // (identifier)
     if (!this.tryAdvancePeekToTokenOfType(TokenType.Identifier)) {
       return null
@@ -64,14 +70,31 @@ export class Parser {
       return null
     }
 
+    const value = this.parseExpression()
+
+    return value ? new LetStatement(letToken, name, value) : null
+  }
+
+  /**
+   * Parses return (expression)
+   */
+  private parseReturnStatement(returnToken: Token) {
+    this.nextToken()
+
+    const returnValue = this.parseExpression()
+
+    return returnValue ? new ReturnStatement(returnToken, returnValue) : null
+  }
+
+  private parseExpression(): Expression | null {
     while (!this.currTokenIs(TokenType.Semicolon)) {
       this.nextToken()
     }
 
-    return new LetStatement(letToken, name, {
+    return {
       tokenLiteral: () => '',
       expressionNode: () => {},
-    })
+    }
   }
 
   private nextToken() {
